@@ -21,3 +21,15 @@ variable "original_cidr" {
   type        = string
   default     = "10.0.0.0/16"
 }
+
+variable "group_name" {
+  description = "The group name for better naming"
+  type        = string
+  default     = "terraform-customize-module"
+}
+
+variable "nat_attached" {
+  description = "Determine if the AWS provided NAT is used"
+  type        = bool
+  default     = false
+}
