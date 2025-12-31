@@ -30,6 +30,12 @@ variable "group_name" {
 
 variable "nat_attached" {
   description = "Determine if the AWS provided NAT is used"
-  type        = bool
-  default     = false
+  type        = number
+  default     = 1
+}
+
+variable "dedicated_eip_for_nat" {
+  description = "Determine if want to use a dedicated EIP for NAT"
+  type        = number
+  default     = 1
 }

@@ -1,8 +1,10 @@
 locals {
   # Logic to determine if tiers should exist
-  enable_private  = var.number_of_layer >= 2
-  enable_isolated = var.number_of_layer == 3
-  creation_method = "Terraform"
+  enable_private        = var.number_of_layer >= 2
+  enable_isolated       = var.number_of_layer == 3
+  enabled_dedicated_eip = var.dedicated_eip_for_nat >= 1
+  enabled_dedicated_nat = var.nat_attached >= 1
+  creation_method       = "Terraform"
 }
 
 resource "aws_vpc" "vpc" {
@@ -80,4 +82,27 @@ resource "aws_route_table_association" "pub_association" {
   count          = length(var.number_of_subnets)
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
   route_table_id = aws_route_table.default_main_route_table.id
+}
+
+resource "aws_eip" "nat_eip" {
+  count  = local.enabled_dedicated_eip ? 1 : 0
+  domain = "vpc"
+  tags = {
+    "Name"    = "${var.group_name}-nat-eip"
+    "Managed" = local.creation_method
+    "Type"    = "public"
+  }
+}
+
+resource "aws_nat_gateway" "main_nat" {
+  count         = local.enabled_dedicated_nat ? 1 : 0
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnets[0].id
+  tags = {
+    "Name"    = "${var.group_name}-nat-gateway"
+    "Managed" = local.creation_method
+    "Type"    = "AWS"
+  }
+
+  depends_on = [aws_eip.nat_eip]
 }
