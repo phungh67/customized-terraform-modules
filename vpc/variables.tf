@@ -11,9 +11,14 @@ variable "number_of_subnets" {
 }
 
 variable "number_of_layer" {
-  description = "The layer of this VPC, public only, private and public or additional database layer"
   type        = number
+  description = "Number of layers: 1 (Public), 2 (Public+Private), 3 (Public+Private+Isolated)"
   default     = 1
+
+  validation {
+    condition     = contains([1, 2, 3], var.number_of_layer)
+    error_message = "The number_of_layer must be 1, 2, or 3."
+  }
 }
 
 variable "original_cidr" {

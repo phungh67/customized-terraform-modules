@@ -1,3 +1,7 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 locals {
   # Logic to determine if tiers should exist
   enable_private        = var.number_of_layer >= 2
@@ -5,7 +9,16 @@ locals {
   enabled_dedicated_eip = var.dedicated_eip_for_nat >= 1
   enabled_dedicated_nat = vvar.dedicated_eip_for_nat >= 1 || local.enabled_dedicated_nat
   creation_method       = "Terraform"
+
+  available_az_count = length(data.aws_availability_zones.available.names)
+  max_azs_to_use     = 3
+  selected_azs = slice(
+    data.aws_availability_zones.available.names,
+    0,
+    min(local.available_az_count, local.max_azs_to_use)
+  )
 }
+
 
 resource "aws_vpc" "vpc" {
   cidr_block = var.original_cidr
@@ -21,9 +34,10 @@ resource "aws_default_security_group" "default_sg" {
 }
 
 resource "aws_subnet" "public_subnets" {
-  count      = var.number_of_subnets
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index)
+  count             = var.number_of_subnets
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = cidrsubnet(var.original_cidr, 8, count.index)
+  availability_zone = element(local.selected_azs, count.index)
   tags = {
     "Name"    = "${var.group_name}-pub-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
@@ -32,9 +46,10 @@ resource "aws_subnet" "public_subnets" {
 }
 
 resource "aws_subnet" "private_subnets" {
-  count      = local.enable_private ? var.number_of_subnets : 0
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index + 10)
+  count             = local.enable_private ? var.number_of_subnets : 0
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = cidrsubnet(var.original_cidr, 8, count.index + 10)
+  availability_zone = element(local.selected_azs, count.index)
   tags = {
     "Name"    = "${var.group_name}-pri-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
@@ -43,9 +58,10 @@ resource "aws_subnet" "private_subnets" {
 }
 
 resource "aws_subnet" "isolated_private_subnets" {
-  count      = local.enable_isolated ? var.number_of_subnets : 0
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index + 20)
+  count             = local.enable_isolated ? var.number_of_subnets : 0
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = cidrsubnet(var.original_cidr, 8, count.index + 20)
+  availability_zone = element(local.selected_azs, count.index)
   tags = {
     "Name"    = "${var.group_name}-db-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
