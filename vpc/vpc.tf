@@ -3,7 +3,7 @@ locals {
   enable_private        = var.number_of_layer >= 2
   enable_isolated       = var.number_of_layer == 3
   enabled_dedicated_eip = var.dedicated_eip_for_nat >= 1
-  enabled_dedicated_nat = var.nat_attached >= 1
+  enabled_dedicated_nat = vvar.dedicated_eip_for_nat >= 1 || local.enabled_dedicated_nat
   creation_method       = "Terraform"
 }
 
@@ -20,16 +20,10 @@ resource "aws_default_security_group" "default_sg" {
   vpc_id = aws_vpc.vpc.id
 }
 
-resource "aws_subnet" "example" {
-  count      = var.number_of_subnets
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index * 10)
-}
-
 resource "aws_subnet" "public_subnets" {
   count      = var.number_of_subnets
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index * 10)
+  cidr_block = cidrsubnet(var.original_cidr, 8, count.index)
   tags = {
     "Name"    = "${var.group_name}-pub-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
@@ -40,7 +34,7 @@ resource "aws_subnet" "public_subnets" {
 resource "aws_subnet" "private_subnets" {
   count      = local.enable_private ? var.number_of_subnets : 0
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index * 11)
+  cidr_block = cidrsubnet(var.original_cidr, 8, count.index + 10)
   tags = {
     "Name"    = "${var.group_name}-pri-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
@@ -51,7 +45,7 @@ resource "aws_subnet" "private_subnets" {
 resource "aws_subnet" "isolated_private_subnets" {
   count      = local.enable_isolated ? var.number_of_subnets : 0
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = cidrsubnet(var.original_cidr, 8, count.index * 12)
+  cidr_block = cidrsubnet(var.original_cidr, 8, count.index + 20)
   tags = {
     "Name"    = "${var.group_name}-db-subnet-00${count.index + 1}"
     "Managed" = local.creation_method
@@ -124,12 +118,12 @@ resource "aws_route_table" "private_route_table" {
 resource "aws_route" "private_internet_route" {
   count                  = local.enabled_dedicated_nat ? 1 : 0
   route_table_id         = aws_route_table.private_route_table.id
-  nat_gateway_id         = aws_nat_gateway.main_nat.id
+  nat_gateway_id         = aws_nat_gateway.main_nat[0].id
   destination_cidr_block = "0.0.0.0/0"
 }
 
 resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private_subnets)
-  subnet_id      = element(aws_subnet.private_subnets[*].ud, count.index)
+  subnet_id      = element(aws_subnet.private_subnets[*].id, count.index)
   route_table_id = aws_route_table.private_route_table.id
 }
