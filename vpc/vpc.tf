@@ -15,6 +15,11 @@ resource "aws_vpc" "vpc" {
   }
 }
 
+# omitted all rule of the default sg
+resource "aws_default_security_group" "default_sg" {
+  vpc_id = aws_vpc.vpc.id
+}
+
 resource "aws_subnet" "example" {
   count      = var.number_of_subnets
   vpc_id     = aws_vpc.vpc.id
@@ -79,7 +84,7 @@ resource "aws_route" "internet_allowance_route" {
 }
 
 resource "aws_route_table_association" "pub_association" {
-  count          = length(var.number_of_subnets)
+  count          = length(aws_subnet.public_subnets)
   subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
   route_table_id = aws_route_table.default_main_route_table.id
 }
@@ -96,7 +101,7 @@ resource "aws_eip" "nat_eip" {
 
 resource "aws_nat_gateway" "main_nat" {
   count         = local.enabled_dedicated_nat ? 1 : 0
-  allocation_id = aws_eip.nat_eip.id
+  allocation_id = aws_eip.nat_eip[0].id
   subnet_id     = aws_subnet.public_subnets[0].id
   tags = {
     "Name"    = "${var.group_name}-nat-gateway"
@@ -105,4 +110,26 @@ resource "aws_nat_gateway" "main_nat" {
   }
 
   depends_on = [aws_eip.nat_eip]
+}
+
+resource "aws_route_table" "private_route_table" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    "Name"    = "${var.group_name}-pri-route-table"
+    "Managed" = local.creation_method
+    "Type"    = "private"
+  }
+}
+
+resource "aws_route" "private_internet_route" {
+  count                  = local.enabled_dedicated_nat ? 1 : 0
+  route_table_id         = aws_route_table.private_route_table.id
+  nat_gateway_id         = aws_nat_gateway.main_nat.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+
+resource "aws_route_table_association" "private" {
+  count          = length(aws_subnet.private_subnets)
+  subnet_id      = element(aws_subnet.private_subnets[*].ud, count.index)
+  route_table_id = aws_route_table.private_route_table.id
 }
