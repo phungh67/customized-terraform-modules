@@ -7,7 +7,7 @@ locals {
   enable_private        = var.number_of_layer >= 2
   enable_isolated       = var.number_of_layer == 3
   enabled_dedicated_eip = var.dedicated_eip_for_nat >= 1
-  enabled_dedicated_nat = var.dedicated_eip_for_nat >= 1 || local.enabled_dedicated_nat
+  enabled_dedicated_nat = var.dedicated_eip_for_nat >= 1 || var.nat_attached > 0
   creation_method       = "Terraform"
 
   available_az_count = length(data.aws_availability_zones.available.names)
