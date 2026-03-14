@@ -44,7 +44,8 @@ module "custom_vpc" {
   # Module specific variables
   vpc_cidr             = "10.0.0.0/16"
   environment          = "dev"
-}```
+}
+```
 
 ## 👨‍💻 Author
 
