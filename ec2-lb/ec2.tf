@@ -1,3 +1,8 @@
+locals {
+  internet_ports = [443, 8080]
+  ssh_ports      = 22
+}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -12,6 +17,76 @@ data "aws_ami" "ubuntu" {
   }
 
   owners = ["099720109477"]
+}
+
+# some defaut rule for security group
+resource "aws_security_group" "internet_allowance" {
+  vpc_id      = var.vpc_id
+  name        = "${var.group_name}-internet-allowance-sg"
+  description = "Attach this group to allow outbound connection to the Internet"
+
+  tags = {
+    "Name" = "${var.group_name}-internet-allowance-sg"
+  }
+}
+
+resource "aws_security_group" "public_bastion" {
+  vpc_id      = var.vpc_id
+  name        = "${var.group_name}-bastion-sg"
+  description = "Allow bastion to be reached from public internet"
+  tags = {
+    "Name" = "${var.group_name}-bastion-sg"
+  }
+}
+
+resource "aws_security_group" "main_machine" {
+  vpc_id      = var.vpc_id
+  name        = "${var.group_name}-base-machine-sg"
+  description = "The main security group for machine, essential rules inculded"
+  tags = {
+    "Name" = "${var.group_name}-base-machine-sg"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "internet_allowance_outbound" {
+  count             = length(local.internet_ports)
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.internet_allowance.id
+  cidr_ipv4         = ["0.0.0.0/0"]
+  from_port         = element(local.internet_ports, count.index)
+  to_port           = element(local.internet_ports, count.index)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "public_bastion_inbound" {
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.public_bastion.id
+  cidr_ipv4         = ["0.0.0.0/0"]
+  from_port         = local.ssh_ports
+  to_port           = local.ssh_ports
+}
+
+resource "aws_vpc_security_group_egress_rule" "bastion_to_machine" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.public_bastion.id
+  referenced_security_group_id = aws_security_group.main_machine.id
+  from_port                    = local.ssh_ports
+  to_port                      = local.ssh_ports
+}
+
+resource "aws_vpc_security_group_ingress_rule" "machine_ssh_from_bastion" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.main_machine.id
+  referenced_security_group_id = aws_security_group.public_bastion.id
+  from_port                    = local.ssh_ports
+  to_port                      = local.ssh_ports
+}
+
+resource "aws_vpc_security_group_ingress_rule" "machine_web_server_inbound" {
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+  security_group_id = aws_security_group.main_machine.id
+  from_port         = "80"
+  to_port           = "80"
 }
 
 resource "aws_instance" "ec2_instances" {
