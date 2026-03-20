@@ -57,3 +57,32 @@ variable "machine_net" {
   default     = ""
 }
 
+variable "generated_new_ssh_key" {
+  description = "Optional, choose to generate a new SSH key or not"
+  type        = number
+  default     = 1
+}
+
+variable "pre_created_ssh_key" {
+  description = "Specify whether a pre-created SSH key or not"
+  type        = number
+  default     = 0
+}
+
+# SSH key module
+variable "key_alogrithm" {
+  description = "Algorithm used to generate SSH key pair"
+  type        = string
+  default     = "RSA"
+
+  validation {
+    condition     = contains(["RSA", "ECDSA", "ED25519"], var.key_alogrithm)
+    error_message = "The key algorithm must be RSA, ECDSA or ED25519."
+  }
+}
+
+variable "key_bits" {
+  description = "Number of bit used in the key generation process"
+  type        = number
+  default     = 4096
+}
