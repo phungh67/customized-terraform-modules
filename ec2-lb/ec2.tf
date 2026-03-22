@@ -102,7 +102,7 @@ resource "tls_private_key" "ssh_key" {
 }
 
 resource "aws_key_pair" "common_key" {
-  count = tls_private_key.ssh_key.id != "" ? 1:0
+  count = tls_private_key.ssh_key.id != null && length(tls_private_key.ssh_key) > 0 ? 1:0
   key_name   = "${var.group_name}-common-ssh-key"
   public_key = tls_private_key.ssh_key[count.index].public_key_openssh
 }
