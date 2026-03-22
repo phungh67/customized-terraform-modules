@@ -69,6 +69,12 @@ variable "pre_created_ssh_key" {
   default     = 0
 }
 
+variable "default_public_ip_to_machine" {
+  description = "Quick test, turn it on, otherwise, it is best to leave it as false"
+  type        = number
+  default     = 0
+}
+
 # SSH key module
 variable "key_alogrithm" {
   description = "Algorithm used to generate SSH key pair"

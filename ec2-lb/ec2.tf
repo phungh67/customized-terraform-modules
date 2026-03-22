@@ -130,10 +130,11 @@ resource "aws_instance" "ec2_bastion_host" {
 }
 
 resource "aws_instance" "ec2_instances" {
-  count         = var.instance_count
-  ami           = coalesce(var.default_ami_value, data.aws_ami.ubuntu.id)
-  region        = var.default_region
-  instance_type = "t3.micro"
+  count                       = var.instance_count
+  ami                         = coalesce(var.default_ami_value, data.aws_ami.ubuntu.id)
+  region                      = var.default_region
+  instance_type               = "t3.micro"
+  associate_public_ip_address = var.default_public_ip_to_machine > 0 ? true : false
 
 
   tags = {
