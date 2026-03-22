@@ -114,7 +114,7 @@ resource "aws_instance" "ec2_bastion_host" {
   region                      = var.default_region
   instance_type               = var.instance_type
   subnet_id                   = var.bastion_net
-  key_name                    = aws_key_pair.common_key.key_name
+  key_name                    = aws_key_pair.common_key[0].key_name
   associate_public_ip_address = true
 
   tags = {
