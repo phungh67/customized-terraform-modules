@@ -103,7 +103,7 @@ resource "tls_private_key" "ssh_key" {
 
 resource "aws_key_pair" "common_key" {
   key_name   = "${var.group_name}-common-ssh-key"
-  public_key = tls_private_key.ssh_key.public_key_openssh
+  public_key = tls_private_key.ssh_key[count.index].public_key_openssh
 }
 
 # bastion first
