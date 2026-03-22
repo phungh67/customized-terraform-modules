@@ -107,6 +107,14 @@ resource "aws_key_pair" "common_key" {
   public_key = tls_private_key.ssh_key[count.index].public_key_openssh
 }
 
+# if yes, remember to take you key :D
+resource "local_file" "ssh_private_key" {
+  count           = local.create_ssh_key_on_run
+  content         = tls_private_key.ssh_key[count.index].private_key_pem
+  filename        = "${path.module}/${var.group_name}-key.pem"
+  file_permission = "0600"
+}
+
 # bastion first
 resource "aws_instance" "ec2_bastion_host" {
   count                       = local.enable_bastion_host
