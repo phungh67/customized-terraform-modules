@@ -5,6 +5,9 @@ locals {
   # logical evaluation
   enable_bastion_host   = var.bastion_host > 0 && var.bastion_net != "" ? 1 : 0
   create_ssh_key_on_run = var.generated_new_ssh_key > 0 ? 1 : 0
+
+  # only allow directly ssh to machine if bastion host is not enabled
+  enable_direct_ssh = local.enable_bastion_host == 0 && var.open_publicy_ssh > 0 ? 1 : 0
 }
 
 data "aws_ami" "ubuntu" {
@@ -62,6 +65,7 @@ resource "aws_vpc_security_group_egress_rule" "internet_allowance_outbound" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "public_bastion_inbound" {
+  count             = local.enable_bastion_host
   ip_protocol       = "tcp"
   security_group_id = aws_security_group.public_bastion.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -70,6 +74,7 @@ resource "aws_vpc_security_group_ingress_rule" "public_bastion_inbound" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "bastion_to_machine" {
+  count                        = local.enable_bastion_host
   ip_protocol                  = "tcp"
   security_group_id            = aws_security_group.public_bastion.id
   referenced_security_group_id = aws_security_group.main_machine.id
@@ -78,11 +83,21 @@ resource "aws_vpc_security_group_egress_rule" "bastion_to_machine" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "machine_ssh_from_bastion" {
+  count                        = local.enable_bastion_host
   ip_protocol                  = "tcp"
   security_group_id            = aws_security_group.main_machine.id
   referenced_security_group_id = aws_security_group.public_bastion.id
   from_port                    = local.ssh_ports
   to_port                      = local.ssh_ports
+}
+
+resource "aws_vpc_security_group_ingress_rule" "directly_ssh_to_machine" {
+  count             = local.enable_direct_ssh
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.main_machine.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = local.ssh_ports
+  to_port           = local.ssh_ports
 }
 
 resource "aws_vpc_security_group_ingress_rule" "machine_web_server_inbound" {
@@ -139,10 +154,11 @@ resource "aws_instance" "ec2_bastion_host" {
 
 resource "aws_instance" "ec2_instances" {
   count                       = var.instance_count
-  ami                         = coalesce(var.default_ami_value, data.aws_ami.ubuntu.id)
+  ami                         = var.default_ami_value != "" ? var.default_ami_value : data.aws_ami.ubuntu.id
   region                      = var.default_region
   instance_type               = "t3.micro"
   associate_public_ip_address = var.default_public_ip_to_machine > 0 ? true : false
+  vpc_security_group_ids      = concat(aws_security_group.main_machine.id, aws_security_group.internet_allowance.id)
 
 
   tags = {
