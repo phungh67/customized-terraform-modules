@@ -156,7 +156,7 @@ resource "aws_instance" "ec2_instances" {
   count                       = var.instance_count
   ami                         = var.default_ami_value != "" ? var.default_ami_value : data.aws_ami.ubuntu.id
   region                      = var.default_region
-  instance_type               = "t3.micro"
+  instance_type               = var.instance_type
   subnet_id                   = var.machine_net
   associate_public_ip_address = var.default_public_ip_to_machine > 0 ? true : false
   key_name                    = aws_key_pair.common_key[0].key_name
