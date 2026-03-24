@@ -1,5 +1,5 @@
 locals {
-  internet_ports = [443, 8080]
+  internet_ports = [443, 80]
   ssh_ports      = 22
 
   # logical evaluation
