@@ -75,6 +75,17 @@ variable "default_public_ip_to_machine" {
   default     = 0
 }
 
+variable "restricted_default_ssh_port" {
+  description = "Force to change the default ssh port on the machine"
+  type        = number
+  default     = 1
+}
+
+variable "new_ssh_port" {
+  description = "Input for the custom SSH port"
+  type        = number
+}
+
 # SSH key module
 variable "key_alogrithm" {
   description = "Algorithm used to generate SSH key pair"

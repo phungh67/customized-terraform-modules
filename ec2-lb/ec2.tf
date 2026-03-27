@@ -6,6 +6,9 @@ locals {
   enable_bastion_host   = var.bastion_host > 0 && var.bastion_net != "" ? 1 : 0
   create_ssh_key_on_run = var.generated_new_ssh_key > 0 ? 1 : 0
 
+  # security hardening
+  default_ssh_port = var.restricted_default_ssh_port != 0 && var.new_ssh_port != 0 ? 1 : 0
+
   # only allow directly ssh to machine if bastion host is not enabled
   enable_direct_ssh = local.enable_bastion_host == 0 && var.open_publicy_ssh > 0 ? 1 : 0
 }
