@@ -1,13 +1,15 @@
 locals {
-  internet_ports = [443, 80]
-  ssh_ports      = 22
+  internet_ports            = [443, 80]
+  default_modified_ssh_port = 2022
+  ssh_ports                 = 22
 
   # logical evaluation
   enable_bastion_host   = var.bastion_host > 0 && var.bastion_net != "" ? 1 : 0
   create_ssh_key_on_run = var.generated_new_ssh_key > 0 ? 1 : 0
 
   # security hardening
-  default_ssh_port = var.restricted_default_ssh_port != 0 && var.new_ssh_port != 0 ? 1 : 0
+  default_ssh_port              = var.restricted_default_ssh_port != 0 ? 1 : 0
+  customized_ssh_port_specified = var.new_ssh_port != 0 ? 1 : 0
 
   # only allow directly ssh to machine if bastion host is not enabled
   enable_direct_ssh = local.enable_bastion_host == 0 && var.open_publicy_ssh > 0 ? 1 : 0
@@ -67,8 +69,8 @@ resource "aws_vpc_security_group_egress_rule" "internet_allowance_outbound" {
   to_port           = element(local.internet_ports, count.index)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "public_bastion_inbound" {
-  count             = local.enable_bastion_host
+resource "aws_vpc_security_group_ingress_rule" "default_public_bastion_inbound" {
+  count             = local.enable_bastion_host == 1 && local.default_ssh_port == 1 ? 1 : 0
   ip_protocol       = "tcp"
   security_group_id = aws_security_group.public_bastion.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -76,6 +78,14 @@ resource "aws_vpc_security_group_ingress_rule" "public_bastion_inbound" {
   to_port           = local.ssh_ports
 }
 
+resource "aws_vpc_security_group_ingress_rule" "restricted_public_bastion_inbound" {
+  count             = local.enable_bastion_host == 1 && local.default_ssh_port == 0 ? 1 : 0
+  ip_protocol       = "tcp"
+  security_group_id = aws_security_group.public_bastion.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = var.new_ssh_port != 0 ? var.new_ssh_port : local.default_modified_ssh_port
+  to_port           = var.new_ssh_port != 0 ? var.new_ssh_port : local.default_modified_ssh_port
+}
 resource "aws_vpc_security_group_egress_rule" "bastion_to_machine" {
   count                        = local.enable_bastion_host
   ip_protocol                  = "tcp"
