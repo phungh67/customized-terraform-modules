@@ -12,8 +12,8 @@ resource "aws_s3_bucket" "general_purpose_bucket" {
 
   tags = merge(
     {
-        name = "${var.bucket-prefix}-${local.default_tags.environment}-bucket"
-        service = "${var.service_type}"
+      name    = "${var.bucket-prefix}-${local.default_tags.environment}-bucket"
+      service = "${var.service_type}"
     },
     local.default_tags
   )

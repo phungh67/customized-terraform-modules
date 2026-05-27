@@ -84,7 +84,7 @@ variable "restricted_default_ssh_port" {
 variable "new_ssh_port" {
   description = "Input for the custom SSH port, default is zero"
   type        = number
-  default = 0
+  default     = 0
 }
 
 # SSH key module
