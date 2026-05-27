@@ -23,6 +23,7 @@ Currently implemented modules (in testing):
 
 * **[`/vpc`](./vpc/)** - Custom Virtual Private Cloud (VPC) module handling subnets, route tables, and internet/NAT gateways.
 * **[`/ec2-lb`](./ec2-lb/)** - Combined EC2 and Load Balancer definitions for quick application server spin-ups.
+* **[`/s3-storage`](./s3-storage/)** - General-purpose S3 bucket module featuring environment-based tagging, dynamic region namespaces, and optional dynamic CORS configurations.
 
 ## 🚀 Upcoming Modules (Roadmap)
 
@@ -46,6 +47,13 @@ module "custom_vpc" {
   environment          = "dev"
 }
 ```
+
+## 🚥 CI/CD & Automated Testing
+
+This repository uses GitHub Actions for continuous integration to ensure code quality and security across all modules. The pipeline includes formatting checks (`terraform fmt`), syntax validation, and static security analysis (e.g., tfsec).
+
+Note on Pipeline Failures:
+A "failed" workflow run does not inherently mean the infrastructure code is broken or contains an error. Security scanners enforce strict, enterprise-grade policies. A failure might simply indicate a flagged security rule that is acceptable for experimental, sandbox, or local development environments, but would otherwise be blocked in a production environment.
 
 ## 👨‍💻 Author
 
