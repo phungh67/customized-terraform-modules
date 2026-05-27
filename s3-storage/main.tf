@@ -25,7 +25,7 @@ resource "aws_s3_bucket_cors_configuration" "general_purpose_bucket_cors" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "POST"]
-    allowed_origins = coalesce(format("https://%s", var.origin_string), local.default_origin)
+    allowed_origins = var.origin_string != "" && var.origin_string != null ? [format("https://%s", var.origin_string)] : [local.default_origin]
     max_age_seconds = 3000
   }
 }
