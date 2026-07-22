@@ -6,24 +6,22 @@
 ![AI-Free Code](https://img.shields.io/badge/Code-100%25%20AI--Free-black?style=flat-square)
 ![AI-Assisted Docs](https://img.shields.io/badge/Docs-AI--Assisted-blue?style=flat-square)
 
-Welcome to my personal library of **Terraform Modules**. This repository serves as a sandbox and central registry for self-written, highly customizable Infrastructure as Code (IaC) modules. 
+This is my personal library, contains Terraform modules that I use frequently (networking, computing and S3 bucket). In the future, there will be more modules, like Kubernetes clusters, computing clusters, or simply some ECS clusters for those like containerized deployment but too lazy for installing and manage a mess of `Docker` container (but maybe `Podman`or `containerd` instead, know knows?) 
 
-> ⚠️ **CRITICAL WARNING - USE AT YOUR OWN RISK**
-> These modules are strictly for **testing and experimentation only**. 
+> ⚠️ **Warning**
+> These modules are currently in development, hence it does not "error-proof".
 > * They still contain known (and unknown) bugs.
 > * They have **not** been fully verified or peer-reviewed.
 > * They have **NOT** been audited or tested against potential security vulnerabilities. 
 > * **Do not use these modules in a production environment.**
 
-> 🧠 **100% AI-Free Code (But AI-Assisted Docs!)** > All Terraform configuration in this repository is proudly written by hand, without the use of generative AI coding assistants. However, this README was entirely AI-generated because I was way too lazy to write it myself!
-
 ## 📦 Available Modules
 
 Currently implemented modules (in testing):
 
-* **[`/vpc`](./vpc/)** - Custom Virtual Private Cloud (VPC) module handling subnets, route tables, and internet/NAT gateways.
-* **[`/ec2-lb`](./ec2-lb/)** - Combined EC2 and Load Balancer definitions for quick application server spin-ups.
-* **[`/s3-storage`](./s3-storage/)** - General-purpose S3 bucket module featuring environment-based tagging, dynamic region namespaces, and optional dynamic CORS configurations.
+* **[`/vpc`](./vpc/)** - Custom Virtual Private Cloud (VPC) module handling subnets, route tables, and internet/NAT gateways. Comes with several common topologies: single subnet for quick testing, 2 layers for public-private architecture and 3 layers for those requires strictly separation between application subnets and data subnet.
+* **[`/ec2-lb`](./ec2-lb/)** - Combined EC2 and Load Balancer definitions for quick application server spin-ups. Also allows user to choose Bastion Host deployment or just simlpy direct remote in the machine (not recommend to do so).
+* **[`/s3-storage`](./s3-storage/)** - General-purpose S3 bucket module featuring environment-based tagging, dynamic region namespaces, and optional dynamic CORS configurations. This bucket is meant to be used in static website development, or to store all the static assests of your service.
 
 ## 🚀 Upcoming Modules (Roadmap)
 
@@ -31,7 +29,7 @@ This repository is actively being expanded. The following modules are currently 
 
 - [ ] **ECS (Elastic Container Service):** Fargate and EC2-backed cluster definitions, task definitions, and service autoscaling.
 - [ ] **ALB (Application Load Balancer):** A dedicated, standalone ALB module with dynamic listener rules, target groups, and ACM certificate integration.
-- [ ] **Static Web with S3:** A fully automated module for provisioning S3 buckets configured for static website hosting, complete with CloudFront distribution and strict Bucket Policies.
+- [ x ] **Static Web with S3:** A fully automated module for provisioning S3 buckets configured for static website hosting, complete with CloudFront distribution and strict Bucket Policies.
 - [ ] **Standalone EC2:** Decoupled, highly parameterized EC2 instances with custom user-data bootstrapping and IAM instance profiles.
 
 ## ⚙️ How to Use (For Testing)
@@ -54,6 +52,8 @@ This repository uses GitHub Actions for continuous integration to ensure code qu
 
 Note on Pipeline Failures:
 A "failed" workflow run does not inherently mean the infrastructure code is broken or contains an error. Security scanners enforce strict, enterprise-grade policies. A failure might simply indicate a flagged security rule that is acceptable for experimental, sandbox, or local development environments, but would otherwise be blocked in a production environment.
+
+In the future, an updated `GitHub Actions` pipeline will be implemented, depends on user's intention, it will change the way "validate and formatted" check works, hence, allowing the "PASSED" result.
 
 ## 👨‍💻 Author
 
